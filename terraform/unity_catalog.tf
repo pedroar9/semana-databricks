@@ -15,6 +15,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "unity_catalog" {
 }
 
 resource "databricks_metastore" "this" {
+  provider = databricks.account
   name = "ubereats-unity-catalog"
   storage_root = "abfss://unity-catalog@${azurerm_storage_account.metastore.name}.dfs.core.windows.net/"
   owner = "admins"
@@ -23,12 +24,14 @@ resource "databricks_metastore" "this" {
 }
 
 resource "databricks_metastore_assignment" "this" {
+  provider = databricks.account
   for_each = toset(local.environments)
   
   metastore_id = databricks_metastore.this.id
   workspace_id = azurerm_databricks_workspace.this[each.key].workspace_id
   default_catalog_name = "ubereats_delivery_services"
 }
+
 resource "databricks_catalog" "domains" {
   for_each = {
     for pair in setproduct(local.environments, ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
@@ -80,6 +83,7 @@ resource "databricks_grants" "catalog_usage" {
   }
 }
 resource "databricks_metastore_data_access" "unity_catalog_access" {
+  provider = databricks.account
   metastore_id = databricks_metastore.this.id
   name         = "storage-credential"
   azure_service_principal {

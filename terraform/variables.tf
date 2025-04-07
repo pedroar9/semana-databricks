@@ -140,3 +140,9 @@ variable "databricks_sku" {
     error_message = "The databricks_sku must be one of: standard, premium, or trial."
   }
 }
+
+variable "databricks_host" {
+  description = "Databricks workspace URL (used for provider configuration)"
+  type        = string
+  default     = ""
+}
