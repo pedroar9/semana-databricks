@@ -122,18 +122,61 @@ cloud-init: cloud-mode login
 	terraform init -ignore-remote-version
 
 .PHONY: cloud-dev-deploy
-cloud-dev-deploy: cloud-init
-	@echo "Running deployment in Terraform Cloud mode with dev variables..."
-	terraform plan $(DEV_VARS)
-	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
-	terraform apply $(DEV_VARS)
+cloud-dev-deploy:
+	@echo "For VCS-connected Terraform Cloud workspaces, the recommended workflow is:"
+	@echo "1. Make changes to your Terraform configuration"
+	@echo "2. Push those changes to your version control system"
+	@echo "3. Terraform Cloud automatically detects changes and triggers a plan"
+	@echo "4. Review and apply the plan in the Terraform Cloud UI"
+	@echo ""
+	@echo "Your Terraform Cloud workspace URL:"
+	@echo "https://app.terraform.io/app/$(TF_ORG)/workspaces/$(TF_WORKSPACE)"
+	@echo ""
+	@echo "Ensure your Azure credentials are configured as variables in Terraform Cloud:"
+	@echo "- client_id"
+	@echo "- client_secret"
+	@echo "- tenant_id"
+	@echo "- subscription_id"
 
 .PHONY: cloud-prod-deploy
-cloud-prod-deploy: cloud-init
-	@echo "Running deployment in Terraform Cloud mode with prod variables..."
-	terraform plan $(PROD_VARS)
-	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
-	terraform apply $(PROD_VARS)
+cloud-prod-deploy:
+	@echo "For VCS-connected Terraform Cloud workspaces, the recommended workflow is:"
+	@echo "1. Make changes to your Terraform configuration"
+	@echo "2. Push those changes to your version control system"
+	@echo "3. Terraform Cloud automatically detects changes and triggers a plan"
+	@echo "4. Review and apply the plan in the Terraform Cloud UI"
+	@echo ""
+	@echo "Your Terraform Cloud workspace URL:"
+	@echo "https://app.terraform.io/app/$(TF_ORG)/workspaces/$(TF_WORKSPACE)"
+	@echo ""
+	@echo "Ensure your Azure credentials are configured as variables in Terraform Cloud:"
+	@echo "- client_id"
+	@echo "- client_secret"
+	@echo "- tenant_id"
+	@echo "- subscription_id"
+
+.PHONY: cloud-setup-guide
+cloud-setup-guide:
+	@echo "Terraform Cloud Setup Guide for VCS-connected workspace"
+	@echo "-----------------------------------------------------"
+	@echo ""
+	@echo "1. Go to: https://app.terraform.io/app/$(TF_ORG)/workspaces/$(TF_WORKSPACE)/variables"
+	@echo ""
+	@echo "2. Add the following Terraform variables (mark as sensitive):"
+	@echo "   - client_id       = \"$(ARM_CLIENT_ID)\""
+	@echo "   - client_secret   = \"$(ARM_CLIENT_SECRET)\""
+	@echo "   - tenant_id       = \"$(ARM_TENANT_ID)\""
+	@echo "   - subscription_id = \"$(ARM_SUBSCRIPTION_ID)\""
+	@echo ""
+	@echo "3. Add the following Environment variables (mark as sensitive):"
+	@echo "   - ARM_CLIENT_ID       = \"$(ARM_CLIENT_ID)\""
+	@echo "   - ARM_CLIENT_SECRET   = \"$(ARM_CLIENT_SECRET)\""
+	@echo "   - ARM_TENANT_ID       = \"$(ARM_TENANT_ID)\""
+	@echo "   - ARM_SUBSCRIPTION_ID = \"$(ARM_SUBSCRIPTION_ID)\""
+	@echo ""
+	@echo "4. Push your changes to GitHub to trigger a plan"
+	@echo ""
+	@echo "5. Review and apply the plan in the Terraform Cloud UI"
 
 .PHONY: azure-backend
 azure-backend:
