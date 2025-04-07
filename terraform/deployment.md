@@ -148,8 +148,8 @@ This option uses your local machine to execute Terraform commands with a local s
    make local-dev-deploy
    
    # OR for phased deployment (recommended)
-   make local-dev-deploy-phase1  # Deploy infrastructure (resource groups, VNets, storage)
-   make local-dev-deploy-phase2  # Deploy Databricks resources (workspaces, clusters, Unity Catalog)
+   make local-dev-deploy-phase1 
+   make local-dev-deploy-phase2 
    ```
    
    The phased approach helps avoid circular dependencies between Azure resources and Databricks resources.
