@@ -15,7 +15,13 @@ terraform {
   }
   required_version = ">= 1.2.0"
   
-  backend "local" {}
+  cloud {
+    organization = "engenharia-academy"
+    
+    workspaces {
+      name = "databricks-platform"
+    }
+  }
 }
 
 provider "azurerm" {

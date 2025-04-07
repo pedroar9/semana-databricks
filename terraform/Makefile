@@ -115,17 +115,11 @@ cloud-mode:
 	@echo "Setting up for Terraform Cloud execution..."
 	@echo "Using organization: $(TF_ORG) and workspace: $(TF_WORKSPACE)"
 	rm -f backend.tf
-	sed -e 's/backend "local" {}/cloud {
-    organization = "$(TF_ORG)"
-    
-    workspaces {
-      name = "$(TF_WORKSPACE)"
-    }
-  }/' main.tf > main.tf.tmp && mv main.tf.tmp main.tf
+	sed -e 's/backend "local" {}/cloud {\n    organization = "$(TF_ORG)"\n    \n    workspaces {\n      name = "$(TF_WORKSPACE)"\n    }\n  }/' main.tf > main.tf.tmp && mv main.tf.tmp main.tf
 
 .PHONY: cloud-init
 cloud-init: cloud-mode login
-	terraform init -reconfigure
+	terraform init -ignore-remote-version
 
 .PHONY: cloud-dev-deploy
 cloud-dev-deploy: cloud-init
