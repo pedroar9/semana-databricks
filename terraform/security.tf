@@ -119,7 +119,7 @@ resource "azurerm_private_endpoint" "databricks_ui" {
 
   private_service_connection {
     name                           = "${local.env_config[each.key].name_prefix}-dbx-ui-psc"
-    private_connection_resource_id = azurerm_databricks_workspace.this[each.key].id
+    private_connection_resource_id = data.azurerm_databricks_workspace.existing[each.key].id
     is_manual_connection           = false
     subresource_names              = ["databricks_ui_api"]
   }
@@ -137,28 +137,12 @@ resource "azurerm_private_endpoint" "databricks_auth" {
 
   private_service_connection {
     name                           = "${local.env_config[each.key].name_prefix}-dbx-auth-psc"
-    private_connection_resource_id = azurerm_databricks_workspace.this[each.key].id
+    private_connection_resource_id = data.azurerm_databricks_workspace.existing[each.key].id
     is_manual_connection           = false
     subresource_names              = ["databricks_ui_auth"]
   }
 
   tags = local.env_config[each.key].tags
-}
-
-resource "azurerm_network_security_rule" "allow_databricks_worker" {
-  for_each = toset(local.environments)
-
-  name                        = "AllowDatabricksWorker"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "AzureDatabricks"
-  destination_address_prefix  = "VirtualNetwork"
-  resource_group_name         = azurerm_resource_group.this[each.key].name
-  network_security_group_name = azurerm_network_security_group.databricks[each.key].name
 }
 
 resource "databricks_ip_access_list" "allowed" {

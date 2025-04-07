@@ -4,7 +4,7 @@ resource "azurerm_machine_learning_workspace" "this" {
   name                    = "${local.env_config[each.key].name_prefix}-ml-workspace"
   location                = azurerm_resource_group.this[each.key].location
   resource_group_name     = azurerm_resource_group.this[each.key].name
-  application_insights_id = azurerm_application_insights.this[each.key].id
+  application_insights_id = data.azurerm_application_insights.existing[each.key].id
   key_vault_id            = azurerm_key_vault.this[each.key].id
   storage_account_id      = azurerm_storage_account.ml[each.key].id
   
@@ -15,14 +15,11 @@ resource "azurerm_machine_learning_workspace" "this" {
   tags = local.env_config[each.key].tags
 }
 
-resource "azurerm_application_insights" "this" {
+data "azurerm_application_insights" "existing" {
   for_each = var.enable_ml_integration ? toset(local.environments) : []
 
   name                = "${local.env_config[each.key].name_prefix}-ai"
-  location            = azurerm_resource_group.this[each.key].location
   resource_group_name = azurerm_resource_group.this[each.key].name
-  application_type    = "web"
-  tags                = local.env_config[each.key].tags
 }
 
 resource "azurerm_storage_account" "ml" {

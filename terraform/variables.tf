@@ -32,9 +32,6 @@ variable "bypass_ip_ranges" {
   type        = list(string)
   default     = []
 }
-
-# Variable moved to optional_vars.tf
-
 variable "client_id" {
   description = "Azure service principal client ID"
   type        = string
