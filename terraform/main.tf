@@ -67,16 +67,12 @@ locals {
   }
 }
 
-resource "random_string" "suffix" {
-  length  = 6
-  special = false
-  upper   = false
-}
+# Using standardized naming patterns instead of random suffixes
 
 resource "azurerm_resource_group" "this" {
   for_each = toset(local.environments)
 
-  name     = "${local.env_config[each.key].name_prefix}-rg-${random_string.suffix.result}"
+  name     = "${local.env_config[each.key].name_prefix}-rg"
   location = local.env_config[each.key].location
   tags     = local.env_config[each.key].tags
 }
@@ -159,14 +155,14 @@ resource "azurerm_subnet_network_security_group_association" "private" {
 data "azurerm_databricks_workspace" "existing" {
   for_each = toset(local.environments)
 
-  name                = "${local.env_config[each.key].name_prefix}-workspace-${random_string.suffix.result}"
+  name                = "${local.env_config[each.key].name_prefix}-workspace"
   resource_group_name = azurerm_resource_group.this[each.key].name
 }
 
 resource "azurerm_key_vault" "this" {
   for_each = toset(local.environments)
 
-  name                     = "${local.env_config[each.key].name_prefix}-kv-${random_string.suffix.result}"
+  name                     = "${local.env_config[each.key].name_prefix}-kv"
   location                 = azurerm_resource_group.this[each.key].location
   resource_group_name      = azurerm_resource_group.this[each.key].name
   tenant_id                = data.azurerm_client_config.current.tenant_id
@@ -192,7 +188,7 @@ resource "azurerm_key_vault" "this" {
 resource "azurerm_storage_account" "adls" {
   for_each = toset(local.environments)
 
-  name                     = "adls${replace(local.env_config[each.key].name_prefix, "-", "")}${random_string.suffix.result}"
+  name                     = "adls${replace(local.env_config[each.key].name_prefix, "-", "")}"
   resource_group_name      = azurerm_resource_group.this[each.key].name
   location                 = azurerm_resource_group.this[each.key].location
   account_tier             = "Standard"

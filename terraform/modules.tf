@@ -25,7 +25,7 @@ data "azurerm_application_insights" "existing" {
 resource "azurerm_storage_account" "ml" {
   for_each = var.enable_ml_integration ? toset(local.environments) : []
 
-  name                     = "ml${replace(local.env_config[each.key].name_prefix, "-", "")}${random_string.suffix.result}"
+  name                     = "ml${replace(local.env_config[each.key].name_prefix, "-", "")}"
   resource_group_name      = azurerm_resource_group.this[each.key].name
   location                 = azurerm_resource_group.this[each.key].location
   account_tier             = "Standard"
