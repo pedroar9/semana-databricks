@@ -1,6 +1,22 @@
+resource "azurerm_storage_account" "metastore" {
+  name                     = "${replace(var.prefix, "-", "")}ucmetastore"
+  resource_group_name      = azurerm_resource_group.this[local.environments[0]].name
+  location                 = azurerm_resource_group.this[local.environments[0]].location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"
+  is_hns_enabled           = true
+  tags                     = local.env_config[local.environments[0]].tags
+}
+
+resource "azurerm_storage_data_lake_gen2_filesystem" "unity_catalog" {
+  name               = "unity-catalog"
+  storage_account_id = azurerm_storage_account.metastore.id
+}
+
 resource "databricks_metastore" "this" {
   name = "ubereats-unity-catalog"
-  storage_root = "abfss://unity-catalog@adlsubereatsprod.dfs.core.windows.net/"
+  storage_root = "abfss://unity-catalog@${azurerm_storage_account.metastore.name}.dfs.core.windows.net/"
   owner = "admins"
   region = "eastus2"
   force_destroy = false
@@ -15,7 +31,7 @@ resource "databricks_metastore_assignment" "this" {
 }
 resource "databricks_catalog" "domains" {
   for_each = {
-    for pair in setproduct(["dev", "prod"], ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(local.environments, ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
       env    = pair[0]
       domain = pair[1]
       config = local.env_config[pair[0]]
@@ -29,7 +45,7 @@ resource "databricks_catalog" "domains" {
 resource "databricks_schema" "medallion" {
   for_each = {
     for entry in setproduct(
-      ["dev", "prod"],
+      local.environments,
       ["ubereats_delivery_services"],
       ["bronze", "silver", "gold"]
     ) : "${entry[0]}-${entry[1]}-${entry[2]}" => {
@@ -45,7 +61,7 @@ resource "databricks_schema" "medallion" {
 }
 resource "databricks_grants" "catalog_usage" {
   for_each = {
-    for pair in setproduct(["dev", "prod"], ["ubereats_delivery_services"], ["data_engineers", "data_scientists", "data_analysts"]) : "${pair[0]}-${pair[1]}-${pair[2]}" => {
+    for pair in setproduct(local.environments, ["ubereats_delivery_services"], ["data_engineers", "data_scientists", "data_analysts"]) : "${pair[0]}-${pair[1]}-${pair[2]}" => {
       env     = pair[0]
       catalog = pair[1]
       group   = pair[2]
@@ -71,6 +87,6 @@ resource "databricks_metastore_data_access" "unity_catalog_access" {
     application_id = var.client_id
     client_secret  = var.client_secret
   }
-  comment = "Metastore credential using deployment service principal"
+  comment = "Metastore credential for dedicated Unity Catalog storage account"
   is_default = true
 }

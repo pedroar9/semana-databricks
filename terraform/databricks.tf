@@ -1,7 +1,6 @@
 resource "azurerm_databricks_workspace" "this" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                        = "${each.value.name_prefix}-workspace"
@@ -50,8 +49,7 @@ resource "azurerm_machine_learning_workspace" "this" {
 
 resource "databricks_cluster" "job_cluster" {
   for_each = {
-    dev  = { config = local.env_config.dev }
-    prod = { config = local.env_config.prod }
+    for env in local.environments : env => { config = local.env_config[env] }
   }
 
   cluster_name            = "${each.value.config.name_prefix}-job-cluster"
@@ -78,8 +76,7 @@ resource "databricks_cluster" "job_cluster" {
 
 resource "databricks_sql_endpoint" "this" {
   for_each = {
-    dev  = { config = local.env_config.dev }
-    prod = { config = local.env_config.prod }
+    for env in local.environments : env => { config = local.env_config[env] }
   }
 
   name             = "${each.value.config.name_prefix}-sql-warehouse"
@@ -92,8 +89,7 @@ resource "databricks_sql_endpoint" "this" {
 
 resource "databricks_secret_scope" "this" {
   for_each = {
-    dev  = { config = local.env_config.dev }
-    prod = { config = local.env_config.prod }
+    for env in local.environments : env => { config = local.env_config[env] }
   }
 
   name = "${each.value.config.name_prefix}-scope"

@@ -1,7 +1,6 @@
 resource "azurerm_resource_group" "this" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name     = "${each.value.name_prefix}-rg"
@@ -11,8 +10,7 @@ resource "azurerm_resource_group" "this" {
 
 resource "azurerm_virtual_network" "this" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                = "${each.value.name_prefix}-vnet"
@@ -24,8 +22,7 @@ resource "azurerm_virtual_network" "this" {
 
 resource "azurerm_network_security_group" "databricks" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                = "${each.value.name_prefix}-nsg"
@@ -36,8 +33,7 @@ resource "azurerm_network_security_group" "databricks" {
 
 resource "azurerm_subnet" "public" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                 = "${each.value.name_prefix}-public-subnet"
@@ -61,8 +57,7 @@ resource "azurerm_subnet" "public" {
 
 resource "azurerm_subnet" "private" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                 = "${each.value.name_prefix}-private-subnet"
@@ -86,8 +81,7 @@ resource "azurerm_subnet" "private" {
 
 resource "azurerm_subnet_network_security_group_association" "public" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   subnet_id                 = azurerm_subnet.public[each.key].id
@@ -96,8 +90,7 @@ resource "azurerm_subnet_network_security_group_association" "public" {
 
 resource "azurerm_subnet_network_security_group_association" "private" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   subnet_id                 = azurerm_subnet.private[each.key].id
@@ -106,8 +99,7 @@ resource "azurerm_subnet_network_security_group_association" "private" {
 
 resource "azurerm_storage_account" "adls" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                     = "adls${replace(each.value.name_prefix, "-", "")}"
@@ -132,15 +124,10 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "this" {
   storage_account_id = azurerm_storage_account.adls[each.value.env].id
 }
 
-resource "azurerm_storage_data_lake_gen2_filesystem" "unity_catalog" {
-  name               = "unity-catalog"
-  storage_account_id = azurerm_storage_account.adls["prod"].id
-}
 
 resource "azurerm_key_vault" "this" {
   for_each = {
-    dev  = local.env_config.dev
-    prod = local.env_config.prod
+    for env in local.environments : env => local.env_config[env]
   }
 
   name                        = "${each.value.name_prefix}-kv"

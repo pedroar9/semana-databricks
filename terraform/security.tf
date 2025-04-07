@@ -101,7 +101,7 @@ resource "azurerm_key_vault_key" "dbfs_encryption" {
   count = var.enable_customer_managed_keys ? 1 : 0
 
   name         = "dbfs-encryption-key"
-  key_vault_id = azurerm_key_vault.this["prod"].id
+  key_vault_id = azurerm_key_vault.this[local.environments[0]].id
   key_type     = "RSA"
   key_size     = 2048
 
