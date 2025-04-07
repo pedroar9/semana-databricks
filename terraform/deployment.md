@@ -65,7 +65,6 @@ The deployment requires an Azure account with permissions to:
 
 6. Register required Azure resource providers:
    ```bash
-   # Register core resource providers
    az provider register --namespace Microsoft.Databricks
    az provider register --namespace Microsoft.Storage
    az provider register --namespace Microsoft.KeyVault
@@ -75,7 +74,6 @@ The deployment requires an Azure account with permissions to:
    az provider register --namespace Microsoft.Compute
    az provider register --namespace Microsoft.Authorization
    
-   # Verify registration status
    az provider list --query "[?registrationState=='Registered'].namespace" -o tsv | grep Microsoft
    ```
    
@@ -144,10 +142,8 @@ This option uses your local machine to execute Terraform commands with a local s
 
 3. For development environment deployment:
    ```bash
-   # For a complete deployment in one step
    make local-dev-deploy
    
-   # OR for phased deployment (recommended)
    make local-dev-deploy-phase1 
    make local-dev-deploy-phase2 
    ```
@@ -156,7 +152,6 @@ This option uses your local machine to execute Terraform commands with a local s
 
 4. For production environment deployment:
    ```bash
-   # For a complete deployment in one step
    make local-prod-deploy
    ```
 
