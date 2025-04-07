@@ -22,24 +22,36 @@ Before deploying this infrastructure, ensure you have:
 2. **Terraform** (version 1.2.0 or higher) installed
 3. **Azure CLI** installed and configured
 4. **Databricks CLI** installed (optional, for post-deployment tasks)
+5. **Required Azure Resource Providers registered** in your subscription:
+   - Microsoft.Databricks
+   - Microsoft.Storage
+   - Microsoft.KeyVault
+   - Microsoft.Network
+   - Microsoft.Insights
+   - Microsoft.OperationalInsights
+   - Microsoft.Compute
+   - Microsoft.Authorization
 
 ## Repository Structure
 
 ```
 .
-├── main.tf                 # Main Terraform configuration
-├── variables.tf            # Input variable definitions
-├── security.tf             # Security-related resources
-├── monitoring.tf           # Monitoring and alerting
-├── modules.tf              # Machine learning modules
+├── locals.tf               # Environment configurations and shared variables
+├── infrastructure.tf       # Core Azure resources (resource groups, VNets, storage)
+├── databricks.tf           # Databricks workspaces, clusters, and SQL warehouses
+├── unity_catalog.tf        # Unity Catalog resources (metastore, catalogs, schemas)
+├── security.tf             # User groups, permissions, and network security
+├── variables.tf            # Input variable definitions in organized sections
+├── outputs.tf              # Consolidated outputs from all resources
 ├── providers.tf            # Provider configurations
-├── optional_vars.tf        # Optional feature flags
 ├── terraform.tfvars        # Default variable values
 ├── dev.tfvars              # Development environment variables
 ├── prod.tfvars             # Production environment variables
 ├── deployment.md           # Detailed deployment guide
 └── README.md               # Documentation
 ```
+
+This simplified structure makes the Terraform configuration more maintainable with logical separation of concerns, easier to navigate with related resources grouped together, and more consistent in style and approach.
 
 ## Deployment Instructions
 

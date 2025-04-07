@@ -1,3 +1,19 @@
+variable "environment" {
+  description = "Target environment to deploy (dev or prod). Leave empty to use deploy_all_environments variable."
+  type        = string
+  default     = "dev"  # Default to dev environment
+  validation {
+    condition     = var.environment == "" || contains(["dev", "prod"], var.environment)
+    error_message = "Environment must be either dev or prod."
+  }
+}
+
+variable "deploy_all_environments" {
+  description = "Whether to deploy all environments (dev and prod) or just the one specified in the environment variable"
+  type        = bool
+  default     = false  # Default to deploying only the specified environment
+}
+
 variable "prefix" {
   description = "Prefix for all resource names"
   type        = string
@@ -27,11 +43,49 @@ variable "enable_unity_catalog" {
   default     = true
 }
 
+variable "enable_ml_integration" {
+  description = "Whether to enable Machine Learning integration"
+  type        = bool
+  default     = true
+}
+
+variable "enable_alerts" {
+  description = "Whether to enable monitoring alerts"
+  type        = bool
+  default     = true
+}
+
+variable "enable_monitoring" {
+  description = "Whether to enable monitoring for Databricks resources"
+  type        = bool
+  default     = true
+}
+
+# Security configuration
+variable "enable_private_endpoints" {
+  description = "Whether to enable private endpoints for Databricks"
+  type        = bool
+  default     = false
+}
+
+variable "enable_customer_managed_keys" {
+  description = "Whether to enable customer-managed keys for encryption"
+  type        = bool
+  default     = false
+}
+
 variable "bypass_ip_ranges" {
-  description = "List of IP ranges to whitelist for Databricks access"
+  description = "IP ranges to bypass network restrictions"
   type        = list(string)
   default     = []
 }
+
+variable "no_public_ip" {
+  description = "Whether to disable public IP for Databricks workspaces"
+  type        = bool
+  default     = true
+}
+
 variable "client_id" {
   description = "Azure service principal client ID"
   type        = string
@@ -52,4 +106,42 @@ variable "tenant_id" {
 variable "subscription_id" {
   description = "Azure subscription ID"
   type        = string
+}
+
+# Compute configuration
+variable "spark_version" {
+  description = "Spark version for Databricks clusters"
+  type        = string
+  default     = "11.3.x-scala2.12"
+}
+
+variable "node_type_id" {
+  description = "Node type for Databricks clusters"
+  type        = string
+  default     = "Standard_DS3_v2"
+}
+
+# Notification configuration
+variable "ops_email" {
+  description = "Email address for operations team"
+  type        = string
+  default     = "ops@example.com"
+}
+
+# Feature flags
+variable "enable_streaming" {
+  description = "Whether to enable streaming features"
+  type        = bool
+  default     = false
+}
+
+# Databricks workspace configuration
+variable "databricks_sku" {
+  description = "The SKU of the Databricks workspace (standard, premium, or trial)"
+  type        = string
+  default     = "premium"
+  validation {
+    condition     = contains(["standard", "premium", "trial"], var.databricks_sku)
+    error_message = "The databricks_sku must be one of: standard, premium, or trial."
+  }
 }

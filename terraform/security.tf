@@ -1,114 +1,69 @@
+# Security Configuration for Databricks Platform
+
+# ========== USER GROUPS ==========
+# Databricks groups for different user roles
 resource "databricks_group" "data_engineers" {
-  for_each = {
-    dev  = "dev"
-    prod = "prod"
-  }
-
-
   display_name = "data-engineers"
 }
 
 resource "databricks_group" "data_scientists" {
-  for_each = {
-    dev  = "dev"
-    prod = "prod"
-  }
-
-
   display_name = "data-scientists"
 }
 
-resource "databricks_group" "analysts" {
-  for_each = {
-    dev  = "dev"
-    prod = "prod"
-  }
-
-
-  display_name = "analysts"
+resource "databricks_group" "data_analysts" {
+  display_name = "data-analysts"
 }
 
-resource "databricks_service_principal" "automation" {
-  for_each = {
-    dev  = "dev"
-    prod = "prod"
-  }
+resource "databricks_group" "ml_engineers" {
+  display_name = "ml-engineers"
+}
 
+# ========== SERVICE PRINCIPALS ==========
+# Service principals for automation
+resource "databricks_service_principal" "automation" {
+  for_each = toset(local.environments)
 
   display_name = "${local.env_config[each.key].name_prefix}-automation-sp"
   allow_cluster_create = true
 }
 
+# ========== PERMISSIONS ==========
+# Cluster permissions for different user groups
 resource "databricks_permissions" "cluster_usage" {
   for_each = {
-    dev = {
-      cluster_id = databricks_cluster.job_cluster["dev"].id
-    }
-    prod = {
-      cluster_id = databricks_cluster.job_cluster["prod"].id
+    for pair in setproduct(local.environments, ["data_engineers", "data_scientists"]) : "${pair[0]}-${pair[1]}" => {
+      env   = pair[0]
+      group = pair[1]
     }
   }
 
-
-  cluster_id = each.value.cluster_id
-
-  access_control {
-    group_name       = databricks_group.data_engineers[each.key].display_name
-    permission_level = "CAN_RESTART"
-  }
+  cluster_id = databricks_cluster.job_cluster[each.value.env].id
 
   access_control {
-    group_name       = databricks_group.data_scientists[each.key].display_name
-    permission_level = "CAN_ATTACH_TO"
+    group_name       = each.value.group == "data_engineers" ? databricks_group.data_engineers.display_name : databricks_group.data_scientists.display_name
+    permission_level = each.value.group == "data_engineers" ? "CAN_RESTART" : "CAN_ATTACH_TO"
   }
 }
 
-resource "databricks_permissions" "sql_warehouse" {
+# SQL warehouse permissions
+resource "databricks_permissions" "sql_warehouse_usage" {
   for_each = {
-    dev = {
-      warehouse_id = databricks_sql_endpoint.analytics["dev"].id
-    }
-    prod = {
-      warehouse_id = databricks_sql_endpoint.analytics["prod"].id
+    for pair in setproduct(local.environments, ["data_analysts"]) : "${pair[0]}-${pair[1]}" => {
+      env   = pair[0]
+      group = pair[1]
     }
   }
 
-
-  sql_endpoint_id = each.value.warehouse_id
+  sql_endpoint_id = databricks_sql_endpoint.this[each.value.env].id
 
   access_control {
-    group_name       = databricks_group.analysts[each.key].display_name
+    group_name       = databricks_group.data_analysts.display_name
     permission_level = "CAN_USE"
   }
 }
 
-resource "databricks_grants" "catalog" {
-  for_each = {
-    for pair in setproduct(["dev", "prod"], ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
-      env    = pair[0]
-      domain = pair[1]
-    }
-  }
-
-
-  catalog = databricks_catalog.domains["${each.value.env}-${each.value.domain}"].name
-
-  grant {
-    principal  = databricks_group.data_engineers[each.value.env].display_name
-    privileges = ["USE_CATALOG", "CREATE", "MODIFY"]
-  }
-
-  grant {
-    principal  = databricks_group.data_scientists[each.value.env].display_name
-    privileges = ["USE_CATALOG", "SELECT"]
-  }
-
-  grant {
-    principal  = databricks_group.analysts[each.value.env].display_name
-    privileges = ["USE_CATALOG", "SELECT"]
-  }
-}
-
+# ========== NETWORK SECURITY ==========
+# Private endpoints for Databricks UI
 resource "azurerm_private_endpoint" "databricks_ui" {
   for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
@@ -127,6 +82,7 @@ resource "azurerm_private_endpoint" "databricks_ui" {
   tags = local.env_config[each.key].tags
 }
 
+# Private endpoints for Databricks Auth
 resource "azurerm_private_endpoint" "databricks_auth" {
   for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
@@ -145,17 +101,17 @@ resource "azurerm_private_endpoint" "databricks_auth" {
   tags = local.env_config[each.key].tags
 }
 
+# IP access lists
 resource "databricks_ip_access_list" "allowed" {
-  for_each = var.enable_private_endpoints ? {
-    dev  = "dev"
-    prod = "prod"
-  } : {}
+  for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
   label                   = "allowed_ips"
   list_type               = "ALLOW"
   ip_addresses            = length(var.bypass_ip_ranges) > 0 ? var.bypass_ip_ranges : ["0.0.0.0/0"]  # Default to allow all if no specific IPs provided
 }
 
+# ========== ENCRYPTION ==========
+# Customer-managed encryption key
 resource "azurerm_key_vault_key" "dbfs_encryption" {
   count = var.enable_customer_managed_keys ? 1 : 0
 
@@ -174,9 +130,4 @@ resource "azurerm_key_vault_key" "dbfs_encryption" {
   ]
 }
 
-output "service_principal_ids" {
-  value = {
-    for env in local.environments : env => databricks_service_principal.automation[env].application_id
-  }
-  description = "Service principal IDs for automation"
-}
+# Outputs have been consolidated in outputs.tf

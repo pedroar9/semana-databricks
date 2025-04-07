@@ -63,6 +63,24 @@ The deployment requires an Azure account with permissions to:
    az login --service-principal -u CLIENT_ID -p CLIENT_SECRET --tenant TENANT_ID
    ```
 
+6. Register required Azure resource providers:
+   ```bash
+   # Register core resource providers
+   az provider register --namespace Microsoft.Databricks
+   az provider register --namespace Microsoft.Storage
+   az provider register --namespace Microsoft.KeyVault
+   az provider register --namespace Microsoft.Network
+   az provider register --namespace Microsoft.Insights
+   az provider register --namespace Microsoft.OperationalInsights
+   az provider register --namespace Microsoft.Compute
+   az provider register --namespace Microsoft.Authorization
+   
+   # Verify registration status
+   az provider list --query "[?registrationState=='Registered'].namespace" -o tsv | grep Microsoft
+   ```
+   
+   > **Note:** If your service principal doesn't have permissions to register resource providers, you can set `skip_provider_registration = true` in the Azure provider configuration in `providers.tf`.
+
 ## Deployment Steps
 
 ### 1. Clone the Repository
@@ -80,6 +98,14 @@ This deployment creates a Databricks Data Intelligence Platform with the followi
 - **Medallion Architecture**: Implements bronze, silver, and gold data layers for each domain
 - **Dual Environment**: Separate development and production environments with appropriate sizing
 - **Standardized Naming**: All resources use consistent, predictable naming patterns without random suffixes
+- **Simplified Structure**: The Terraform code is organized in logical components for better maintainability
+  - `locals.tf`: Environment configurations and shared variables
+  - `infrastructure.tf`: Core Azure resources (resource groups, VNets, storage)
+  - `databricks.tf`: Databricks workspaces, clusters, and SQL warehouses
+  - `unity_catalog.tf`: Unity Catalog resources (metastore, catalogs, schemas)
+  - `security.tf`: User groups, permissions, and network security
+  - `variables.tf`: Input variable definitions in organized sections
+  - `outputs.tf`: Consolidated outputs from all resources
 
 ### 2. Set up Credentials
 
@@ -121,14 +147,12 @@ This option uses your local machine to execute Terraform commands with a local s
    # For a complete deployment in one step
    make local-dev-deploy
    
-   # OR for phased deployment
-   make dev-plan-core
-   make dev-apply-core
-   make dev-plan-storage
-   make dev-apply-storage
-   make dev-plan-databricks
-   make dev-apply-databricks
+   # OR for phased deployment (recommended)
+   make local-dev-deploy-phase1  # Deploy infrastructure (resource groups, VNets, storage)
+   make local-dev-deploy-phase2  # Deploy Databricks resources (workspaces, clusters, Unity Catalog)
    ```
+   
+   The phased approach helps avoid circular dependencies between Azure resources and Databricks resources.
 
 4. For production environment deployment:
    ```bash
@@ -279,20 +303,36 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
 
 ### Common Issues
 
-1. **Network Issues**:
+1. **Resource Provider Registration Issues**:
+   - Error: `Error ensuring Resource Providers are registered`
+   - Solution: Register required providers with `az provider register --namespace Microsoft.<ProviderName>` or set `skip_provider_registration = true` in the Azure provider configuration
+
+2. **Invalid Reference Errors**:
+   - Error: `A reference to a resource type must be followed by at least one attribute access`
+   - Solution: When referencing resources with dynamic keys, use lookup functions or conditional expressions instead of variable-based resource references
+
+3. **Network Issues**:
    - Verify subnet delegations for Databricks
    - Check NSG rules for conflicts
+   - Ensure the CIDR ranges don't overlap with other networks
 
-2. **Permission Issues**:
+4. **Permission Issues**:
    - Ensure service principal has Contributor role
    - For Data Lake Gen2 Filesystem errors, ensure your service principal has the "Storage Blob Data Contributor" role
+   - For Unity Catalog, ensure the service principal has appropriate permissions
 
-3. **Authentication Issues**:
-   - Ensure service principal credentials are correctly configured
+5. **Authentication Issues**:
+   - Ensure service principal credentials are correctly configured in `credentials.auto.tfvars`
    - When using Terraform Cloud, verify both Terraform variables and Environment variables are set correctly
+   - Check for expired service principal credentials
 
-4. **Terraform Cloud VCS Limitations**:
+6. **Terraform Cloud VCS Limitations**:
    - When using VCS-connected workspaces in Terraform Cloud, saved plan files are not allowed
+
+7. **Unity Catalog Issues**:
+   - Remember that only one metastore can be created per region
+   - Ensure proper metastore assignments to workspaces
+   - Verify storage credential configuration
 
 5. **Standardized Resource Naming**:
    - This deployment uses standardized resource names without random suffixes for better maintainability
