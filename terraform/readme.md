@@ -243,11 +243,10 @@ env_config = {
 Control which features are enabled using the variable files:
 
 ```terraform
-# In dev.tfvars or prod.tfvars
-enable_ml_integration = true        # Enable Azure ML workspace integration
-enable_alerts = true                # Enable monitoring and alerting
-enable_private_endpoints = false    # Enable private endpoints for enhanced security
-enable_customer_managed_keys = false # Enable customer-managed keys for DBFS encryption
+enable_ml_integration = true 
+enable_alerts = true         
+enable_private_endpoints = false
+enable_customer_managed_keys = false
 ```
 
 These feature flags correspond to the variables defined in `optional_vars.tf` and allow you to selectively enable or disable components of the infrastructure.

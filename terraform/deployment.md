@@ -357,10 +357,7 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
 
 3. **Switching Between Local and Cloud Backends**:
    ```bash
-   # Switch to local backend
    make local-mode
-   
-   # Switch to Terraform Cloud backend
    make cloud-mode
    ```
 
