@@ -71,16 +71,19 @@ resource "azurerm_monitor_action_group" "ops" {
   tags = local.env_config[each.key].tags
 }
 
-data "azurerm_application_insights" "monitoring_existing" {
+resource "azurerm_application_insights" "monitoring" {
   for_each = var.enable_alerts ? toset(local.environments) : []
 
   name                = "${local.env_config[each.key].name_prefix}-appinsights"
+  location            = azurerm_resource_group.this[each.key].location
   resource_group_name = azurerm_resource_group.this[each.key].name
+  application_type    = "web"
+  tags                = local.env_config[each.key].tags
 }
 
 output "app_insights_instrumentation_key" {
   value = {
-    for env in local.environments : env => var.enable_alerts ? data.azurerm_application_insights.monitoring_existing[env].instrumentation_key : null
+    for env in local.environments : env => var.enable_alerts ? azurerm_application_insights.monitoring[env].instrumentation_key : null
   }
   description = "Application Insights instrumentation key for Databricks monitoring"
   sensitive   = true

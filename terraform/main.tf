@@ -245,49 +245,20 @@ data "azurerm_client_config" "current" {}
 
 
 
-resource "databricks_cluster" "shared_autoscaling" {
+resource "databricks_cluster" "job_cluster" {
   for_each = {
     dev  = { config = local.env_config.dev }
     prod = { config = local.env_config.prod }
   }
 
-
-
-  cluster_name            = "${each.value.config.name_prefix}-shared-cluster"
+  cluster_name            = "${each.value.config.name_prefix}-job"
   spark_version           = each.value.config.spark_version
   node_type_id            = each.value.config.node_type
   autotermination_minutes = each.value.config.autotermination_minutes
 
   autoscale {
-    min_workers = each.value.config.min_workers
-    max_workers = each.value.config.max_workers
-  }
-
-  spark_conf = {
-    "spark.databricks.delta.preview.enabled" : "true",
-    "spark.databricks.io.cache.enabled" : "true",
-    "spark.sql.adaptive.enabled" : "true"
-  }
-
-  custom_tags = each.value.config.tags
-}
-
-resource "databricks_cluster" "data_science" {
-  for_each = {
-    dev  = { config = local.env_config.dev }
-    prod = { config = local.env_config.prod }
-  }
-
-
-
-  cluster_name            = "${each.value.config.name_prefix}-data-science-cluster"
-  spark_version           = each.value.config.spark_version
-  node_type_id            = each.value.config.node_type
-  autotermination_minutes = each.value.config.autotermination_minutes
-
-  autoscale {
-    min_workers = each.value.config.min_workers
-    max_workers = each.value.config.max_workers
+    min_workers = 1
+    max_workers = 5 
   }
 
   spark_conf = {
@@ -297,20 +268,8 @@ resource "databricks_cluster" "data_science" {
   }
 
   custom_tags = merge(each.value.config.tags, {
-    Purpose = "DataScience"
+    Purpose = "JobCompute"
   })
-
-  library {
-    pypi {
-      package = "scikit-learn"
-    }
-  }
-
-  library {
-    pypi {
-      package = "xgboost"
-    }
-  }
 }
 
 resource "databricks_sql_endpoint" "analytics" {
@@ -319,12 +278,13 @@ resource "databricks_sql_endpoint" "analytics" {
     prod = { config = local.env_config.prod }
   }
 
-
-
   name             = "${each.value.config.name_prefix}-sql-warehouse"
-  cluster_size     = each.key == "prod" ? "Medium" : "Small"
-  max_num_clusters = each.key == "prod" ? 2 : 1
-  auto_stop_mins   = each.key == "prod" ? 60 : 30
+  warehouse_type   = "PRO"
+  cluster_size     = "2X-Small"
+  max_num_clusters = 1
+  auto_stop_mins   = 30
+  enable_serverless_compute = true
+  enable_photon    = true
 }
 
 resource "databricks_metastore" "this" {

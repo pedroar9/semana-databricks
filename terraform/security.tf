@@ -42,10 +42,10 @@ resource "databricks_service_principal" "automation" {
 resource "databricks_permissions" "cluster_usage" {
   for_each = {
     dev = {
-      cluster_id = databricks_cluster.shared_autoscaling["dev"].id
+      cluster_id = databricks_cluster.job_cluster["dev"].id
     }
     prod = {
-      cluster_id = databricks_cluster.shared_autoscaling["prod"].id
+      cluster_id = databricks_cluster.job_cluster["prod"].id
     }
   }
 
@@ -146,16 +146,14 @@ resource "azurerm_private_endpoint" "databricks_auth" {
 }
 
 resource "databricks_ip_access_list" "allowed" {
-  for_each = {
+  for_each = var.enable_private_endpoints ? {
     dev  = "dev"
     prod = "prod"
-  }
-
+  } : {}
 
   label                   = "allowed_ips"
   list_type               = "ALLOW"
-  ip_addresses            = var.bypass_ip_ranges
-
+  ip_addresses            = length(var.bypass_ip_ranges) > 0 ? var.bypass_ip_ranges : ["0.0.0.0/0"]  # Default to allow all if no specific IPs provided
 }
 
 resource "azurerm_key_vault_key" "dbfs_encryption" {
