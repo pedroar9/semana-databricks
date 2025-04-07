@@ -28,6 +28,10 @@ resource "azurerm_application_insights" "ml" {
   resource_group_name = azurerm_resource_group.this[each.key].name
   application_type    = "web"
   tags                = local.env_config[each.key].tags
+  
+  lifecycle {
+    ignore_changes = [workspace_id]
+  }
 }
 
 resource "azurerm_machine_learning_workspace" "this" {
@@ -103,6 +107,10 @@ resource "azurerm_application_insights" "monitoring" {
   resource_group_name = azurerm_resource_group.this[each.key].name
   application_type    = "web"
   tags                = local.env_config[each.key].tags
+  
+  lifecycle {
+    ignore_changes = [workspace_id]
+  }
 }
 
 resource "azurerm_monitor_action_group" "ops" {
