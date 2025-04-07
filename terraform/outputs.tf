@@ -26,15 +26,3 @@ output "app_insights_instrumentation_key" {
   description = "Application Insights instrumentation key for Databricks monitoring"
   sensitive   = true
 }
-
-output "metastore_id" {
-  value       = databricks_metastore.this.id
-  description = "ID of the Unity Catalog metastore"
-}
-
-output "catalog_names" {
-  value = {
-    for key, catalog in databricks_catalog.domains : key => catalog.name
-  }
-  description = "Names of the Unity Catalog catalogs"
-}

@@ -14,9 +14,6 @@ locals {
   }
   
   skip_ml_workspace = true
-  
-  metastore_id = databricks_metastore.this.id
-  
   cluster_config = {
     dev = {
       min_workers = 1

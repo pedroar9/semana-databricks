@@ -30,10 +30,22 @@ resource "databricks_permissions" "cluster_usage" {
   }
 
   cluster_id = databricks_cluster.job_cluster[each.value.env].id
+  
+  depends_on = [
+    databricks_cluster.job_cluster,
+    databricks_group.data_engineers,
+    databricks_group.data_scientists
+  ]
 
   access_control {
     group_name       = each.value.group == "data_engineers" ? databricks_group.data_engineers.display_name : databricks_group.data_scientists.display_name
     permission_level = each.value.group == "data_engineers" ? "CAN_RESTART" : "CAN_ATTACH_TO"
+  }
+  
+  lifecycle {
+    ignore_changes = [
+      access_control
+    ]
   }
 }
 
@@ -46,10 +58,20 @@ resource "databricks_permissions" "sql_warehouse_usage" {
   }
 
   sql_endpoint_id = databricks_sql_endpoint.this[each.value.env].id
+  
+  depends_on = [
+    databricks_sql_endpoint.this,
+    databricks_group.data_analysts
+  ]
 
   access_control {
     group_name       = databricks_group.data_analysts.display_name
     permission_level = "CAN_USE"
+  }
+  lifecycle {
+    ignore_changes = [
+      access_control
+    ]
   }
 }
 
