@@ -30,11 +30,11 @@ provider "azurerm" {
 }
 
 provider "databricks" {
-  alias             = "account"
-  host              = "https://accounts.azuredatabricks.net"
-  azure_client_id     = var.client_id
-  azure_client_secret = var.client_secret
-  azure_tenant_id     = var.tenant_id
+  alias                  = "account"
+  host                   = "https://accounts.azuredatabricks.net"
+  azure_client_id        = var.client_id
+  azure_client_secret    = var.client_secret
+  azure_tenant_id        = var.tenant_id
 }
 
 provider "databricks" {
