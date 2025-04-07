@@ -1,15 +1,8 @@
-#!/bin/bash
-
-# This script sets the necessary environment variables for Terraform
-# Usage: source ./set-env.sh
-
-# Set Terraform variables - replace with your actual values
 export TF_VAR_client_id="your-client-id"
 export TF_VAR_client_secret="your-client-secret"
 export TF_VAR_tenant_id="your-tenant-id"
 export TF_VAR_subscription_id="your-subscription-id"
 
-# Set Azure provider variables (also required)
 export ARM_CLIENT_ID="$TF_VAR_client_id"
 export ARM_CLIENT_SECRET="$TF_VAR_client_secret"
 export ARM_TENANT_ID="$TF_VAR_tenant_id"

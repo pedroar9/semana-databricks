@@ -100,13 +100,10 @@ You have three deployment options:
 This option uses your local machine to execute Terraform commands with a local state file:
 
 ```bash
-# Initialize Terraform locally
 make local-init
 
-# Deploy development environment
 make local-dev-deploy
 
-# Deploy production environment
 make local-prod-deploy
 ```
 
@@ -137,13 +134,10 @@ make local-prod-deploy
 5. Use the Makefile targets for Terraform Cloud deployment:
 
 ```bash
-# Initialize Terraform Cloud connection
 make cloud-init
 
-# Deploy development environment
 make cloud-dev-deploy
 
-# Deploy production environment
 make cloud-prod-deploy
 ```
 
@@ -204,10 +198,8 @@ terraform apply -var-file=dev.tfvars
 To deploy the entire environment in one step:
 
 ```bash
-# Development environment
 make dev-deploy
 
-# Production environment
 make prod-deploy
 ```
 

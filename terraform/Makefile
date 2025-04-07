@@ -3,7 +3,6 @@ PROD_VARS := -var-file=prod.tfvars
 CORE_TARGETS := -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_databricks_workspace.this
 STORAGE_TARGETS := -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
 
-# Terraform Cloud configuration
 TF_ORG := engenharia-academy
 TF_WORKSPACE := databricks-platform
 
