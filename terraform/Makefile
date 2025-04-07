@@ -96,13 +96,29 @@ set-azure-credentials:
 local-init: local-mode set-azure-credentials
 	terraform init
 
-.PHONY: local-dev-deploy
-local-dev-deploy: local-mode
-	@echo "Running deployment in local mode with credentials from credentials.auto.tfvars..."
+.PHONY: local-dev-deploy-phase1
+local-dev-deploy-phase1: local-mode
+	@echo "Phase 1: Deploying Azure infrastructure (without Databricks resources)..."
+	terraform init
+	terraform plan $(DEV_VARS) -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_network_security_group.databricks -target=azurerm_subnet_network_security_group_association.public -target=azurerm_subnet_network_security_group_association.private -target=azurerm_databricks_workspace.this -target=azurerm_key_vault.this -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
+	terraform apply $(DEV_VARS) -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_network_security_group.databricks -target=azurerm_subnet_network_security_group_association.public -target=azurerm_subnet_network_security_group_association.private -target=azurerm_databricks_workspace.this -target=azurerm_key_vault.this -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+
+.PHONY: local-dev-deploy-phase2
+local-dev-deploy-phase2: local-mode
+	@echo "Phase 2: Deploying Databricks resources..."
 	terraform init
 	terraform plan $(DEV_VARS)
 	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
 	terraform apply $(DEV_VARS)
+
+.PHONY: local-dev-deploy
+local-dev-deploy: local-mode
+	@echo "Running two-phase deployment in local mode with credentials from credentials.auto.tfvars..."
+	@echo "Phase 1: First deploying Azure infrastructure..."
+	make local-dev-deploy-phase1
+	@echo "Phase 2: Now deploying Databricks resources..."
+	make local-dev-deploy-phase2
 
 .PHONY: local-prod-deploy
 local-prod-deploy: local-mode

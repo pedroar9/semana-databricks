@@ -72,6 +72,15 @@ git clone <repository-url>
 cd <repository-directory>/terraform
 ```
 
+### Architecture Overview
+
+This deployment creates a Databricks Data Intelligence Platform with the following key components:
+
+- **Single Domain Architecture**: The platform is designed around a single business domain (`ubereats_delivery_services`) for simplified management
+- **Medallion Architecture**: Implements bronze, silver, and gold data layers for each domain
+- **Dual Environment**: Separate development and production environments with appropriate sizing
+- **Standardized Naming**: All resources use consistent, predictable naming patterns without random suffixes
+
 ### 2. Set up Credentials
 
 Create a credentials file for your Azure service principal:
@@ -97,15 +106,40 @@ You have three deployment options:
 
 #### Option A: Local Deployment
 
-This option uses your local machine to execute Terraform commands with a local state file:
+This option uses your local machine to execute Terraform commands with a local state file.
 
-```bash
-make local-init
+1. First, ensure your credentials are set up correctly in `credentials.auto.tfvars`
 
-make local-dev-deploy
+2. Initialize Terraform in local mode:
+   ```bash
+   make local-mode
+   make local-init
+   ```
 
-make local-prod-deploy
-```
+3. For development environment deployment:
+   ```bash
+   # For a complete deployment in one step
+   make local-dev-deploy
+   
+   # OR for phased deployment
+   make dev-plan-core
+   make dev-apply-core
+   make dev-plan-storage
+   make dev-apply-storage
+   make dev-plan-databricks
+   make dev-apply-databricks
+   ```
+
+4. For production environment deployment:
+   ```bash
+   # For a complete deployment in one step
+   make local-prod-deploy
+   ```
+
+5. After deployment, verify the outputs:
+   ```bash
+   terraform output
+   ```
 
 #### Option B: Terraform Cloud Deployment
 
@@ -260,8 +294,9 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
 4. **Terraform Cloud VCS Limitations**:
    - When using VCS-connected workspaces in Terraform Cloud, saved plan files are not allowed
 
-5. **Workspace Naming**:
-   - This deployment uses standardized workspace names (`ubereats-dev-workspace` and `ubereats-prod-workspace`) without random suffixes
+5. **Standardized Resource Naming**:
+   - This deployment uses standardized resource names without random suffixes for better maintainability
+   - Resource naming follows predictable patterns (e.g., `ubereats-dev-workspace`, `ubereats-dev-rg`, `adlsubereatsdev`)
    - If you're migrating from a previous deployment with random suffixes, you may need to import existing resources
 
 6. **GitHub Push Protection**:

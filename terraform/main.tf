@@ -67,7 +67,11 @@ locals {
   }
 }
 
-# Using standardized naming patterns instead of random suffixes
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
 
 resource "azurerm_resource_group" "this" {
   for_each = toset(local.environments)
@@ -152,11 +156,23 @@ resource "azurerm_subnet_network_security_group_association" "private" {
   network_security_group_id = azurerm_network_security_group.databricks[each.key].id
 }
 
-data "azurerm_databricks_workspace" "existing" {
+resource "azurerm_databricks_workspace" "this" {
   for_each = toset(local.environments)
 
   name                = "${local.env_config[each.key].name_prefix}-workspace"
   resource_group_name = azurerm_resource_group.this[each.key].name
+  location            = azurerm_resource_group.this[each.key].location
+  sku                 = local.env_config[each.key].sku
+  tags                = local.env_config[each.key].tags
+  
+  custom_parameters {
+    no_public_ip        = false
+    public_subnet_name  = azurerm_subnet.public[each.key].name
+    private_subnet_name = azurerm_subnet.private[each.key].name
+    virtual_network_id  = azurerm_virtual_network.this[each.key].id
+    public_subnet_network_security_group_association_id  = azurerm_subnet_network_security_group_association.public[each.key].id
+    private_subnet_network_security_group_association_id = azurerm_subnet_network_security_group_association.private[each.key].id
+  }
 }
 
 resource "azurerm_key_vault" "this" {
@@ -425,7 +441,7 @@ resource "databricks_cluster_policy" "data_engineering" {
 
 output "databricks_urls" {
   value = {
-    for env in local.environments : env => data.azurerm_databricks_workspace.existing[env].workspace_url
+    for env in local.environments : env => azurerm_databricks_workspace.this[env].workspace_url
   }
   description = "URLs of the Databricks workspaces"
 }

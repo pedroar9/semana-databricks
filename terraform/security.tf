@@ -119,7 +119,7 @@ resource "azurerm_private_endpoint" "databricks_ui" {
 
   private_service_connection {
     name                           = "${local.env_config[each.key].name_prefix}-dbx-ui-psc"
-    private_connection_resource_id = data.azurerm_databricks_workspace.existing[each.key].id
+    private_connection_resource_id = azurerm_databricks_workspace.this[each.key].id
     is_manual_connection           = false
     subresource_names              = ["databricks_ui_api"]
   }
@@ -137,7 +137,7 @@ resource "azurerm_private_endpoint" "databricks_auth" {
 
   private_service_connection {
     name                           = "${local.env_config[each.key].name_prefix}-dbx-auth-psc"
-    private_connection_resource_id = data.azurerm_databricks_workspace.existing[each.key].id
+    private_connection_resource_id = azurerm_databricks_workspace.this[each.key].id
     is_manual_connection           = false
     subresource_names              = ["databricks_ui_auth"]
   }

@@ -13,7 +13,7 @@ resource "azurerm_monitor_diagnostic_setting" "databricks" {
   for_each = var.enable_alerts ? toset(local.environments) : []
 
   name                       = "diag-${local.env_config[each.key].name_prefix}-databricks"
-  target_resource_id         = data.azurerm_databricks_workspace.existing[each.key].id
+  target_resource_id         = azurerm_databricks_workspace.this[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this[each.key].id
 
   enabled_log {
