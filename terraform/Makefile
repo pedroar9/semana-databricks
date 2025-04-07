@@ -36,6 +36,8 @@ dev-plan-databricks: dev-apply-storage
 
 .PHONY: dev-apply-databricks
 dev-apply-databricks: dev-plan-databricks
+	@echo "Getting Databricks workspace URL..."
+	./scripts/get_workspace_url.sh
 	terraform apply $(DEV_VARS)
 
 .PHONY: dev-deploy
@@ -103,10 +105,16 @@ local-dev-deploy-phase1: local-mode
 	terraform plan $(DEV_VARS) -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_network_security_group.databricks -target=azurerm_subnet_network_security_group_association.public -target=azurerm_subnet_network_security_group_association.private -target=azurerm_databricks_workspace.this -target=azurerm_key_vault.this -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
 	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
 	terraform apply $(DEV_VARS) -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_network_security_group.databricks -target=azurerm_subnet_network_security_group_association.public -target=azurerm_subnet_network_security_group_association.private -target=azurerm_databricks_workspace.this -target=azurerm_key_vault.this -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+	@echo "Getting Databricks workspace URL..."
+	./scripts/get_workspace_url.sh
 
 .PHONY: local-dev-deploy-phase2
 local-dev-deploy-phase2: local-mode
 	@echo "Phase 2: Deploying Databricks resources..."
+	@echo "Ensuring workspace URL is configured..."
+	if [ ! -f workspace.auto.tfvars ]; then \
+		./scripts/get_workspace_url.sh; \
+	fi
 	terraform init
 	terraform plan $(DEV_VARS)
 	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."

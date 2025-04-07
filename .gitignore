@@ -33,3 +33,5 @@ terraform/set-env.sh
 *.bak
 
 .vscode/
+
+.windsurfrules

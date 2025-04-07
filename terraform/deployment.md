@@ -169,11 +169,11 @@ This option uses your local machine to execute Terraform commands with a local s
 
 1. Create a Terraform Cloud account at [app.terraform.io](https://app.terraform.io) if you don't have one
 
-2. Create an organization or use an existing one (default: `engenharia-academy`)
+2. Use the existing organization `engenharia-academy`
 
-3. Create a new workspace for your Databricks deployment (default: `databricks-platform`):
+3. Use the existing workspace `databricks-platform` which is already VCS-connected:
    - Workflow Type: Version Control Workflow
-   - Connect to your VCS provider and select the repository
+   - Connected to the repository
 
 4. Configure workspace variables in Terraform Cloud:
    - Navigate to your workspace in Terraform Cloud
@@ -259,6 +259,18 @@ To deploy the entire environment in one step:
 make dev-deploy
 
 make prod-deploy
+```
+
+For this project, we're primarily focused on the development environment, so you can just run:
+
+```bash
+make dev-deploy
+```
+
+Or for local deployment:
+
+```bash
+make local-dev-deploy
 ```
 
 ## Post-Deployment Tasks
@@ -363,13 +375,7 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
 
 ### Makefile Help
 
-To see all available Makefile targets:
-
-```bash
-make help
-```
-
-This will show you all available commands for deployment, including:
+The Makefile doesn't have a help target, but here are all the available commands for deployment:
 
 #### Local Deployment Commands
 - `local-init`: Initialize Terraform locally
@@ -398,3 +404,5 @@ This will show you all available commands for deployment, including:
 - [Azure Databricks documentation](https://learn.microsoft.com/en-us/azure/databricks/)
 - [Terraform Azure Provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [Terraform Databricks Provider documentation](https://registry.terraform.io/providers/databricks/databricks/latest/docs)
+- [Databricks Unity Catalog documentation](https://docs.databricks.com/data-governance/unity-catalog/index.html)
+- [Databricks Workspace Documentation](https://learn.microsoft.com/en-us/azure/databricks/workspace/)
