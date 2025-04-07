@@ -1,6 +1,6 @@
 # Deployment Guide for Databricks Data Intelligence Platform
 
-This guide provides step-by-step instructions for deploying the Databricks Data Intelligence Platform on Microsoft Azure using Terraform. The deployment process has been optimized with a Makefile for efficiency and consistency.
+This guide provides step-by-step instructions for deploying the Databricks Data Intelligence Platform on Microsoft Azure using Terraform. The deployment process has been optimized with a Makefile for efficiency and consistency, supporting both local deployments and Terraform Cloud integration.
 
 ## Prerequisites
 
@@ -69,17 +69,54 @@ The deployment requires an Azure account with permissions to:
 
 ```bash
 git clone <repository-url>
-cd <repository-directory>
+cd <repository-directory>/terraform
 ```
 
-### 2. Set up Terraform Cloud (Option A)
+### 2. Set up Credentials
+
+Create a credentials file for your Azure service principal:
+
+```bash
+cp credentials.auto.tfvars.template credentials.auto.tfvars
+```
+
+Edit `credentials.auto.tfvars` with your Azure service principal credentials:
+
+```hcl
+client_id       = "your-client-id"
+client_secret   = "your-client-secret"
+tenant_id       = "your-tenant-id"
+subscription_id = "your-subscription-id"
+```
+
+> **Important:** The `credentials.auto.tfvars` file is excluded from Git via `.gitignore` to prevent accidentally committing sensitive information.
+
+### 3. Choose Deployment Method
+
+You have three deployment options:
+
+#### Option A: Local Deployment
+
+This option uses your local machine to execute Terraform commands with a local state file:
+
+```bash
+# Initialize Terraform locally
+make local-init
+
+# Deploy development environment
+make local-dev-deploy
+
+# Deploy production environment
+make local-prod-deploy
+```
+
+#### Option B: Terraform Cloud Deployment
 
 1. Create a Terraform Cloud account at [app.terraform.io](https://app.terraform.io) if you don't have one
 
-2. Create an organization or use an existing one
+2. Create an organization or use an existing one (default: `engenharia-academy`)
 
-3. Create a new workspace for your Databricks deployment:
-   - Workspace Name: `databricks-platform`
+3. Create a new workspace for your Databricks deployment (default: `databricks-platform`):
    - Workflow Type: Version Control Workflow
    - Connect to your VCS provider and select the repository
 
@@ -97,25 +134,24 @@ cd <repository-directory>
      - `ARM_TENANT_ID`: Same as your tenant_id
      - `ARM_SUBSCRIPTION_ID`: Same as your subscription_id
 
-5. Update your Terraform configuration in `main.tf` to use Terraform Cloud:
+5. Use the Makefile targets for Terraform Cloud deployment:
 
-```terraform
-terraform {
-  cloud {
-    organization = "your-organization"
-    
-    workspaces {
-      name = "databricks-platform"
-    }
-  }
-}
+```bash
+# Initialize Terraform Cloud connection
+make cloud-init
+
+# Deploy development environment
+make cloud-dev-deploy
+
+# Deploy production environment
+make cloud-prod-deploy
 ```
 
 > **Note:** When using a VCS-connected Terraform Cloud workspace, saved plan files are not allowed. The Makefile has been configured to use direct apply commands instead.
 
-### Azure Storage Backend (Option B)
+#### Option C: Azure Storage Backend
 
-If you prefer using Azure Storage for state management instead of Terraform Cloud:
+If you prefer using Azure Storage for state management:
 
 ```bash
 ./azure-backend.sh
@@ -123,50 +159,56 @@ If you prefer using Azure Storage for state management instead of Terraform Clou
 
 The script will create a resource group, storage account, and container for Terraform state, then output the configuration needed for your backend.
 
-After running the script, update the backend configuration in `main.tf`:
+### 4. Phased Deployment Approach
 
-```terraform
-terraform {
-  backend "azurerm" {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "tfstate1234567890"  # Use the name from script output
-    container_name       = "tfstate"
-    key                  = "databricks.terraform.tfstate"
-  }
-}
-```
+The Makefile supports a phased deployment approach to avoid provider configuration issues:
 
-### Provider Configuration
-
-Both the Azure and Databricks providers need to be configured properly. When using Terraform Cloud, you should use variables instead of hardcoded credentials:
-
-```terraform
-provider "azurerm" {
-  features {
-    key_vault {
-      purge_soft_delete_on_destroy = true
-    }
-  }
-  skip_provider_registration = true
-  
-  client_id       = var.client_id
-  client_secret   = var.client_secret
-  tenant_id       = var.tenant_id
-  subscription_id = var.subscription_id
-}
-terraform init
-```
-
-### 2. Deploy Development Environment
+#### Phase 1: Deploy Core Azure Resources
 
 ```bash
+make dev-apply-core
+```
+
+Or manually:
+```bash
+terraform plan -var-file=dev.tfvars -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_databricks_workspace.this
+terraform apply -var-file=dev.tfvars -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_databricks_workspace.this
+```
+
+##### Phase 2: Deploy Storage Resources
+
+```bash
+make dev-apply-storage
+```
+
+Or manually:
+```bash
+terraform plan -var-file=dev.tfvars -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+terraform apply -var-file=dev.tfvars -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+```
+
+##### Phase 3: Deploy Databricks Resources
+
+```bash
+make dev-apply-databricks
+```
+
+Or manually:
+```bash
+terraform plan -var-file=dev.tfvars
 terraform apply -var-file=dev.tfvars
 ```
 
-### 3. Deploy Production Environment
+### 5. Complete Deployment
+
+To deploy the entire environment in one step:
 
 ```bash
-terraform apply -var-file=prod.tfvars
+# Development environment
+make dev-deploy
+
+# Production environment
+make prod-deploy
 ```
 
 ## Post-Deployment Tasks
@@ -226,8 +268,13 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
 4. **Terraform Cloud VCS Limitations**:
    - When using VCS-connected workspaces in Terraform Cloud, saved plan files are not allowed
 
-5. **Resource Name Conflicts**:
-   - For resources with random suffixes, you may need to import them if changing the naming convention
+5. **Workspace Naming**:
+   - This deployment uses standardized workspace names (`ubereats-dev-workspace` and `ubereats-prod-workspace`) without random suffixes
+   - If you're migrating from a previous deployment with random suffixes, you may need to import existing resources
+
+6. **GitHub Push Protection**:
+   - Ensure sensitive files like `credentials.auto.tfvars` and `set-env.sh` are in `.gitignore`
+   - Use template files (e.g., `credentials.auto.tfvars.template`) for sharing credential structures without actual secrets
 
 ### Local Deployment Issues
 
@@ -241,6 +288,15 @@ databricks secrets create-scope --scope project-secrets --initial-manage-princip
    terraform init -reconfigure
    ```
 
+3. **Switching Between Local and Cloud Backends**:
+   ```bash
+   # Switch to local backend
+   make local-mode
+   
+   # Switch to Terraform Cloud backend
+   make cloud-mode
+   ```
+
 ### Makefile Help
 
 To see all available Makefile targets:
@@ -250,12 +306,28 @@ make help
 ```
 
 This will show you all available commands for deployment, including:
-- `init`: Initialize Terraform
-- `dev-deploy`: Deploy development environment
-- `prod-deploy`: Deploy production environment
+
+#### Local Deployment Commands
+- `local-init`: Initialize Terraform locally
 - `local-dev-deploy`: Deploy development environment locally
 - `local-prod-deploy`: Deploy production environment locally
-- Individual phase targets like `dev-apply-core`, `dev-apply-storage`, etc.
+
+#### Terraform Cloud Commands
+- `cloud-init`: Initialize Terraform with Terraform Cloud backend
+- `cloud-dev-deploy`: Deploy development environment using Terraform Cloud
+- `cloud-prod-deploy`: Deploy production environment using Terraform Cloud
+
+#### Standard Deployment Commands
+- `dev-deploy`: Deploy complete development environment
+- `prod-deploy`: Deploy complete production environment
+- `dev-destroy`: Destroy development environment
+- `prod-destroy`: Destroy production environment
+
+#### Phased Deployment Commands
+- `dev-apply-core`: Deploy core Azure resources for development
+- `dev-apply-storage`: Deploy storage resources for development
+- `dev-apply-databricks`: Deploy Databricks resources for development
+- Similar commands exist for production with `prod-` prefix
 
 ## Support Resources
 
