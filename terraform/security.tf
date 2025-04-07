@@ -1,7 +1,3 @@
-# Security Configuration for Databricks Platform
-
-# ========== USER GROUPS ==========
-# Databricks groups for different user roles
 resource "databricks_group" "data_engineers" {
   display_name = "data-engineers"
 }
@@ -18,8 +14,6 @@ resource "databricks_group" "ml_engineers" {
   display_name = "ml-engineers"
 }
 
-# ========== SERVICE PRINCIPALS ==========
-# Service principals for automation
 resource "databricks_service_principal" "automation" {
   for_each = toset(local.environments)
 
@@ -27,8 +21,6 @@ resource "databricks_service_principal" "automation" {
   allow_cluster_create = true
 }
 
-# ========== PERMISSIONS ==========
-# Cluster permissions for different user groups
 resource "databricks_permissions" "cluster_usage" {
   for_each = {
     for pair in setproduct(local.environments, ["data_engineers", "data_scientists"]) : "${pair[0]}-${pair[1]}" => {
@@ -45,7 +37,6 @@ resource "databricks_permissions" "cluster_usage" {
   }
 }
 
-# SQL warehouse permissions
 resource "databricks_permissions" "sql_warehouse_usage" {
   for_each = {
     for pair in setproduct(local.environments, ["data_analysts"]) : "${pair[0]}-${pair[1]}" => {
@@ -62,8 +53,6 @@ resource "databricks_permissions" "sql_warehouse_usage" {
   }
 }
 
-# ========== NETWORK SECURITY ==========
-# Private endpoints for Databricks UI
 resource "azurerm_private_endpoint" "databricks_ui" {
   for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
@@ -82,7 +71,6 @@ resource "azurerm_private_endpoint" "databricks_ui" {
   tags = local.env_config[each.key].tags
 }
 
-# Private endpoints for Databricks Auth
 resource "azurerm_private_endpoint" "databricks_auth" {
   for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
@@ -101,17 +89,14 @@ resource "azurerm_private_endpoint" "databricks_auth" {
   tags = local.env_config[each.key].tags
 }
 
-# IP access lists
 resource "databricks_ip_access_list" "allowed" {
   for_each = var.enable_private_endpoints ? toset(local.environments) : []
 
   label                   = "allowed_ips"
   list_type               = "ALLOW"
-  ip_addresses            = length(var.bypass_ip_ranges) > 0 ? var.bypass_ip_ranges : ["0.0.0.0/0"]  # Default to allow all if no specific IPs provided
+  ip_addresses            = length(var.bypass_ip_ranges) > 0 ? var.bypass_ip_ranges : ["0.0.0.0/0"]
 }
 
-# ========== ENCRYPTION ==========
-# Customer-managed encryption key
 resource "azurerm_key_vault_key" "dbfs_encryption" {
   count = var.enable_customer_managed_keys ? 1 : 0
 
@@ -129,5 +114,3 @@ resource "azurerm_key_vault_key" "dbfs_encryption" {
     "wrapKey",
   ]
 }
-
-# Outputs have been consolidated in outputs.tf

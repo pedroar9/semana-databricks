@@ -1,6 +1,3 @@
-# Core Azure Infrastructure Resources
-
-# Resource Groups
 resource "azurerm_resource_group" "this" {
   for_each = {
     dev  = local.env_config.dev
@@ -12,7 +9,6 @@ resource "azurerm_resource_group" "this" {
   tags     = each.value.tags
 }
 
-# Virtual Networks
 resource "azurerm_virtual_network" "this" {
   for_each = {
     dev  = local.env_config.dev
@@ -26,7 +22,6 @@ resource "azurerm_virtual_network" "this" {
   tags                = each.value.tags
 }
 
-# Network Security Group for Databricks
 resource "azurerm_network_security_group" "databricks" {
   for_each = {
     dev  = local.env_config.dev
@@ -39,7 +34,6 @@ resource "azurerm_network_security_group" "databricks" {
   tags                = each.value.tags
 }
 
-# Subnets for Databricks
 resource "azurerm_subnet" "public" {
   for_each = {
     dev  = local.env_config.dev
@@ -90,7 +84,6 @@ resource "azurerm_subnet" "private" {
   }
 }
 
-# Associate NSG with Subnets
 resource "azurerm_subnet_network_security_group_association" "public" {
   for_each = {
     dev  = local.env_config.dev
@@ -111,7 +104,6 @@ resource "azurerm_subnet_network_security_group_association" "private" {
   network_security_group_id = azurerm_network_security_group.databricks[each.key].id
 }
 
-# Storage Accounts
 resource "azurerm_storage_account" "adls" {
   for_each = {
     dev  = local.env_config.dev
@@ -128,7 +120,6 @@ resource "azurerm_storage_account" "adls" {
   tags                     = each.value.tags
 }
 
-# Storage Containers
 resource "azurerm_storage_data_lake_gen2_filesystem" "this" {
   for_each = {
     for pair in setproduct(local.environments, ["landing", "bronze", "silver", "gold"]) : "${pair[0]}-${pair[1]}" => {
@@ -141,13 +132,11 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "this" {
   storage_account_id = azurerm_storage_account.adls[each.value.env].id
 }
 
-# Unity Catalog Storage
 resource "azurerm_storage_data_lake_gen2_filesystem" "unity_catalog" {
   name               = "unity-catalog"
   storage_account_id = azurerm_storage_account.adls["prod"].id
 }
 
-# Key Vaults
 resource "azurerm_key_vault" "this" {
   for_each = {
     dev  = local.env_config.dev
@@ -178,7 +167,6 @@ resource "azurerm_key_vault" "this" {
   }
 }
 
-# Machine Learning Storage Accounts
 resource "azurerm_storage_account" "ml" {
   for_each = var.enable_ml_integration ? toset(local.environments) : []
 
@@ -190,5 +178,4 @@ resource "azurerm_storage_account" "ml" {
   tags                     = local.env_config[each.key].tags
 }
 
-# Current Azure client configuration
 data "azurerm_client_config" "current" {}

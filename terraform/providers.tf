@@ -22,7 +22,7 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
-  skip_provider_registration = true  # Skip provider registration which often causes errors
+  skip_provider_registration = true
   client_id                 = var.client_id
   client_secret             = var.client_secret
   tenant_id                 = var.tenant_id

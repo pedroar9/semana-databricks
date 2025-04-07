@@ -1,6 +1,3 @@
-# Databricks Workspaces and Related Resources
-
-# Databricks Workspaces
 resource "azurerm_databricks_workspace" "this" {
   for_each = {
     dev  = local.env_config.dev
@@ -24,7 +21,6 @@ resource "azurerm_databricks_workspace" "this" {
   }
 }
 
-# Application Insights for ML Workspaces
 resource "azurerm_application_insights" "ml" {
   for_each = var.enable_ml_integration ? toset(local.environments) : []
 
@@ -35,7 +31,6 @@ resource "azurerm_application_insights" "ml" {
   tags                = local.env_config[each.key].tags
 }
 
-# Machine Learning Workspaces
 resource "azurerm_machine_learning_workspace" "this" {
   for_each = var.enable_ml_integration && !local.skip_ml_workspace ? toset(local.environments) : []
 
@@ -53,7 +48,6 @@ resource "azurerm_machine_learning_workspace" "this" {
   tags = local.env_config[each.key].tags
 }
 
-# Databricks Clusters
 resource "databricks_cluster" "job_cluster" {
   for_each = {
     dev  = { config = local.env_config.dev }
@@ -82,7 +76,6 @@ resource "databricks_cluster" "job_cluster" {
   }
 }
 
-# SQL Warehouses
 resource "databricks_sql_endpoint" "this" {
   for_each = {
     dev  = { config = local.env_config.dev }
@@ -97,7 +90,6 @@ resource "databricks_sql_endpoint" "this" {
   enable_photon    = true
 }
 
-# Secret Scopes
 resource "databricks_secret_scope" "this" {
   for_each = {
     dev  = { config = local.env_config.dev }
@@ -107,7 +99,6 @@ resource "databricks_secret_scope" "this" {
   name = "${each.value.config.name_prefix}-scope"
 }
 
-# Monitoring Resources
 resource "azurerm_application_insights" "monitoring" {
   for_each = var.enable_alerts ? toset(local.environments) : []
 
@@ -118,7 +109,6 @@ resource "azurerm_application_insights" "monitoring" {
   tags                = local.env_config[each.key].tags
 }
 
-# Monitoring Action Groups
 resource "azurerm_monitor_action_group" "ops" {
   for_each = var.enable_alerts ? toset(local.environments) : []
 
@@ -133,7 +123,6 @@ resource "azurerm_monitor_action_group" "ops" {
   }
 }
 
-# Simplified diagnostic settings for Databricks
 resource "azurerm_monitor_diagnostic_setting" "databricks" {
   for_each = var.enable_monitoring ? toset(local.environments) : []
 
@@ -141,10 +130,8 @@ resource "azurerm_monitor_diagnostic_setting" "databricks" {
   target_resource_id         = azurerm_databricks_workspace.this[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this[each.key].id
   
-  # Enable all logs with 30-day retention
   log_analytics_destination_type = "Dedicated"
   
-  # Core logs
   enabled_log {
     category = "dbfs"
   }
@@ -169,14 +156,12 @@ resource "azurerm_monitor_diagnostic_setting" "databricks" {
     category = "workspace"
   }
   
-  # Enable metrics
   metric {
     category = "AllMetrics"
     enabled  = true
   }
 }
 
-# Simplified diagnostic settings for Storage
 resource "azurerm_monitor_diagnostic_setting" "storage" {
   for_each = var.enable_monitoring ? toset(local.environments) : []
 
@@ -184,7 +169,6 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
   target_resource_id         = azurerm_storage_account.adls[each.key].id
   log_analytics_workspace_id = azurerm_log_analytics_workspace.this[each.key].id
   
-  # Enable metrics
   metric {
     category = "Transaction"
     enabled  = true
@@ -196,7 +180,6 @@ resource "azurerm_monitor_diagnostic_setting" "storage" {
   }
 }
 
-# Log Analytics Workspaces
 resource "azurerm_log_analytics_workspace" "this" {
   for_each = var.enable_monitoring ? toset(local.environments) : []
 

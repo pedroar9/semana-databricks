@@ -1,7 +1,7 @@
 variable "environment" {
   description = "Target environment to deploy (dev or prod). Leave empty to use deploy_all_environments variable."
   type        = string
-  default     = "dev"  # Default to dev environment
+  default     = "dev"
   validation {
     condition     = var.environment == "" || contains(["dev", "prod"], var.environment)
     error_message = "Environment must be either dev or prod."
@@ -11,7 +11,7 @@ variable "environment" {
 variable "deploy_all_environments" {
   description = "Whether to deploy all environments (dev and prod) or just the one specified in the environment variable"
   type        = bool
-  default     = false  # Default to deploying only the specified environment
+  default     = false
 }
 
 variable "prefix" {
@@ -61,7 +61,6 @@ variable "enable_monitoring" {
   default     = true
 }
 
-# Security configuration
 variable "enable_private_endpoints" {
   description = "Whether to enable private endpoints for Databricks"
   type        = bool
@@ -108,7 +107,6 @@ variable "subscription_id" {
   type        = string
 }
 
-# Compute configuration
 variable "spark_version" {
   description = "Spark version for Databricks clusters"
   type        = string
@@ -121,21 +119,18 @@ variable "node_type_id" {
   default     = "Standard_DS3_v2"
 }
 
-# Notification configuration
 variable "ops_email" {
   description = "Email address for operations team"
   type        = string
   default     = "ops@example.com"
 }
 
-# Feature flags
 variable "enable_streaming" {
   description = "Whether to enable streaming features"
   type        = bool
   default     = false
 }
 
-# Databricks workspace configuration
 variable "databricks_sku" {
   description = "The SKU of the Databricks workspace (standard, premium, or trial)"
   type        = string
