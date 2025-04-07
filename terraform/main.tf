@@ -330,7 +330,7 @@ resource "databricks_metastore" "this" {
 
 resource "databricks_catalog" "domains" {
   for_each = {
-    for pair in setproduct(["dev", "prod"], ["ubereats_operations", "ubereats_finance", "ubereats_ml"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(["dev", "prod"], ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
       env    = pair[0]
       domain = pair[1]
       config = local.env_config[pair[0]]
@@ -348,7 +348,7 @@ resource "databricks_schema" "medallion" {
   for_each = {
     for entry in setproduct(
       ["dev", "prod"],
-      ["ubereats_operations", "ubereats_finance", "ubereats_ml"],
+      ["ubereats_delivery_services"],
       ["bronze", "silver", "gold"]
     ) : "${entry[0]}-${entry[1]}-${entry[2]}" => {
       env     = entry[0]

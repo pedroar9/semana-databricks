@@ -84,7 +84,7 @@ resource "databricks_permissions" "sql_warehouse" {
 
 resource "databricks_grants" "catalog" {
   for_each = {
-    for pair in setproduct(["dev", "prod"], ["ubereats_operations", "ubereats_finance", "ubereats_ml"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(["dev", "prod"], ["ubereats_delivery_services"]) : "${pair[0]}-${pair[1]}" => {
       env    = pair[0]
       domain = pair[1]
     }
