@@ -84,11 +84,14 @@ resource "databricks_sql_endpoint" "this" {
   }
 
   name             = "${each.value.config.name_prefix}-sql-warehouse"
-  cluster_size     = "Small"
+  warehouse_type   = "PRO"
+  cluster_size     = "2X-Small"
   max_num_clusters = local.sql_warehouse_config[each.key].max_num_clusters
   min_num_clusters = local.sql_warehouse_config[each.key].min_num_clusters
   auto_stop_mins   = local.sql_warehouse_config[each.key].auto_stop_mins
   enable_photon    = true
+  enable_serverless_compute = true
+  spot_instance_policy = "COST_OPTIMIZED"
 }
 
 resource "databricks_secret_scope" "this" {

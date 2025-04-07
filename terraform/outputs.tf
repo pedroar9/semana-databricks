@@ -28,8 +28,8 @@ output "app_insights_instrumentation_key" {
 }
 
 output "metastore_id" {
-  value       = databricks_metastore.this.id
-  description = "ID of the Unity Catalog metastore"
+  value       = local.unity_catalog_enabled ? local.metastore_id : "Unity Catalog not enabled"
+  description = "ID of the Unity Catalog metastore (if enabled)"
 }
 
 output "catalog_names" {
