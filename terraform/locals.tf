@@ -1,7 +1,5 @@
 locals {
-  target_env = var.environment != "" ? [var.environment] : ["dev", "prod"]
-  environments = var.deploy_all_environments ? ["dev", "prod"] : local.target_env
-  
+  environments = var.deploy_all_environments ? ["dev", "prod"] : (var.environment != "" ? [var.environment] : ["dev"])  
   env_config = {
     dev = {
       name_prefix = "ubereats-dev"
