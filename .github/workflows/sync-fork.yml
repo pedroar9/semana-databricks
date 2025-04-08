@@ -6,8 +6,8 @@ on:
   uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
   with:
     upstream_sync_repo: "original-owner/original-repo"  # Formato owner/repo
-    upstream_sync_branch: "main"                        # Branch do upstream
-    target_sync_branch: "main"                          # Branch do fork
+    upstream_sync_branch: "main"                        
+    target_sync_branch: "main"                          
     target_repo_token: ${{ secrets.GITHUB_TOKEN }}      # Token obrigatório
     git_config_user: "pedroar9"
     git_config_email: "pedrocarlos.assis@gmail.com"
