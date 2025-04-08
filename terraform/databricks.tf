@@ -53,7 +53,7 @@ resource "azurerm_machine_learning_workspace" "this" {
 
 resource "databricks_cluster" "job_cluster" {
   for_each = {
-    for env in local.environments : env => { config = local.env_config[env] }
+    for env in local.environments : env => { config = local.env_config[env] } if env == "prod"
   }
 
   cluster_name            = "${each.value.config.name_prefix}-job-cluster"
@@ -80,7 +80,7 @@ resource "databricks_cluster" "job_cluster" {
 
 resource "databricks_sql_endpoint" "this" {
   for_each = {
-    for env in local.environments : env => { config = local.env_config[env] }
+    for env in local.environments : env => { config = local.env_config[env] } if env == "prod"
   }
 
   name             = "${each.value.config.name_prefix}-sql-warehouse"
