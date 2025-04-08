@@ -23,7 +23,7 @@ resource "databricks_service_principal" "automation" {
 
 resource "databricks_permissions" "cluster_usage" {
   for_each = {
-    for pair in setproduct(local.environments, ["data_engineers", "data_scientists"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(["prod"], ["data_engineers", "data_scientists"]) : "${pair[0]}-${pair[1]}" => {
       env   = pair[0]
       group = pair[1]
     }
@@ -51,7 +51,7 @@ resource "databricks_permissions" "cluster_usage" {
 
 resource "databricks_permissions" "sql_warehouse_usage" {
   for_each = {
-    for pair in setproduct(local.environments, ["data_analysts"]) : "${pair[0]}-${pair[1]}" => {
+    for pair in setproduct(["prod"], ["data_analysts"]) : "${pair[0]}-${pair[1]}" => {
       env   = pair[0]
       group = pair[1]
     }

@@ -1,0 +1,9 @@
+{
+    "status_id": 1,
+    "order_identifier": "bf2304cd-107b-0a67-6a42-4c5848ca0e0b",
+    "status": {
+      "status_name": "Order Placed",
+      "timestamp": 1738792248012
+    },
+    "dt_current_timestamp": "2025-02-05 21:50:48.012"
+}
