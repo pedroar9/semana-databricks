@@ -129,10 +129,30 @@ local-dev-deploy: local-mode
 	make local-dev-deploy-phase2
 
 .PHONY: local-prod-deploy
-local-prod-deploy: local-mode
-	@echo "Running deployment in local mode with Azure credentials..."
+local-prod-deploy: local-prod-deploy-phase1 local-prod-deploy-phase2
+	@echo "Production environment deployment complete"
+
+.PHONY: local-prod-deploy-phase1
+local-prod-deploy-phase1: local-mode
+	@echo "Phase 1: Deploying Azure infrastructure for PRODUCTION (without Databricks resources)..."
 	terraform init -force-copy
-	terraform apply $(PROD_VARS) -auto-approve
+	terraform plan $(PROD_VARS)
+	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
+	terraform apply $(PROD_VARS) -target=azurerm_resource_group.this -target=azurerm_virtual_network.this -target=azurerm_subnet.public -target=azurerm_subnet.private -target=azurerm_network_security_group.databricks -target=azurerm_subnet_network_security_group_association.public -target=azurerm_subnet_network_security_group_association.private -target=azurerm_databricks_workspace.this -target=azurerm_key_vault.this -target=azurerm_storage_account.adls -target=azurerm_storage_data_lake_gen2_filesystem.this
+	@echo "Getting Databricks workspace URL..."
+	./scripts/get_workspace_url.sh
+
+.PHONY: local-prod-deploy-phase2
+local-prod-deploy-phase2: local-mode
+	@echo "Phase 2: Deploying Databricks resources for PRODUCTION..."
+	@echo "Ensuring workspace URL is configured..."
+	if [ ! -f workspace.auto.tfvars ]; then \
+		./scripts/get_workspace_url.sh; \
+	fi
+	terraform init
+	terraform plan $(PROD_VARS)
+	@echo "Review the plan above. Type 'yes' to apply or Ctrl+C to cancel."
+	terraform apply $(PROD_VARS)
 
 .PHONY: cloud-mode
 cloud-mode:

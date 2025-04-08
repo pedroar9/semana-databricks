@@ -1,0 +1,28 @@
+environment = "prod"
+
+client_id       = "YOUR_CLIENT_ID"
+client_secret   = "YOUR_CLIENT_SECRET"
+tenant_id       = "YOUR_TENANT_ID"
+subscription_id = "YOUR_SUBSCRIPTION_ID"
+
+prefix          = "ubereats"
+location        = "eastus2"
+
+databricks_sku  = "premium"
+spark_version   = "11.3.x-scala2.12"
+node_type_id    = "Standard_DS3_v2"
+
+enable_unity_catalog       = false
+enable_ml_integration      = true
+enable_alerts              = true
+enable_monitoring          = true
+enable_private_endpoints   = false
+enable_customer_managed_keys = false
+no_public_ip               = true
+
+ops_email       = "ops@example.com"
+
+resource_tags   = {
+  Environment = "Production"
+  Project     = "UberEats"
+}
